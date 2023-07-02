@@ -5,15 +5,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-
-[[bin]]
-name = "my_project"
-path = "src/main.rs"
-
-[lib]
-name = "logger"
-path = "logger/mod.rs"
-
 [dependencies]
 log = "0.4"
 env_logger = "0.9"

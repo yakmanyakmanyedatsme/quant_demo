@@ -1,18 +1,22 @@
-[package]
-name = "my_project"
-version = "0.1.0"
-edition = "2018"
+extern crate logger;
+use log::{info, LevelFilter};
+use env_logger::Builder;
+use std::{fs::File, io::Write};
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+pub fn setup() -> std::io::Result<()> {
+    let file = File::create("log.txt")?;
+    let mut builder = Builder::new();
+    builder.format(|buf, record| writeln!(buf, "{}: {}", record.level(), record.args()));
+    builder.filter(None, LevelFilter::Info);
+    builder.write_style(env_logger::WriteStyle::Always);
+    builder.target(env_logger::Target::Writer(Box::new(file)));
+    builder.init();
 
-[[bin]]
-name = "my_project"
-path = "src/main.rs"
+    Ok(())
+}
 
-[lib]
-name = "logger"
-path = "logger/mod.rs"
-
-[dependencies]
-log = "0.4"
-env_logger = "0.9"
+pub fn log_names(names: Vec<&str>) {
+    for name in names {
+        info!("Processing name: {}", name);
+    }
+}

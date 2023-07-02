@@ -12,7 +12,6 @@ use tokio_stream::StreamExt;
 
 static DB: Surreal<Client> = Surreal::init();
 
-
 pub async fn visit(
     paths: &str,
 ) -> Result<Vec<DirEntry>, std::io::Error>{
