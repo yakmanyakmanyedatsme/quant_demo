@@ -1,4 +1,4 @@
-extern crate logger;
+mod logger;
 use surrealdb::engine::any;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::engine::remote::ws::Ws;

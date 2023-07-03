@@ -10,7 +10,6 @@ pub fn setup() -> std::io::Result<()> {
     builder.write_style(env_logger::WriteStyle::Always);
     builder.target(env_logger::Target::Writer(Box::new(file)));
     builder.init();
-
     Ok(())
 }
 
