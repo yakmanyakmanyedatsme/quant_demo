@@ -5,8 +5,11 @@ use surrealdb::engine::remote::ws::Ws;
 use surrealdb::kvs::Val;
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
-use surrealdb::{self, dbs::Session, kvs::Datastore}
+use surrealdb::{self, dbs::Session, kvs::Datastore};
 use tokio;
+use tokio::fs::{self,DirEntry};
+use std::env;
+use std::path::Path;
 use tokio::spawn;
 use tokio_stream::StreamExt;
 
@@ -38,7 +41,7 @@ async fn main() {
     let url: &str = "209.127.152.40:21";
     let completed_file = std::path::Path::new(cplt);//"/root/data/complete.txt"
     let path_vec = visit(&ext).await.unwrap();
-    DB.connect::<Ws>("localhost:8080").await.unwrap();
+    DB.connect::<Ws>("10.162.0.2:8080").await.unwrap();
     // Log into the database
     DB.signin(Root {
         username: "root",
@@ -46,12 +49,14 @@ async fn main() {
     })
     .await
     .unwrap();
-    //DB.use_ns("").use_db("").await.unwrap();
+    println!("Connected");
+    DB.use_ns("commodities").use_db("soy.futures").await.unwrap();
     //let company: Obvs = DB.create("company-year").content(row_json).await.unwrap();
     let mut counter = 0;
     for entry in path_vec.iter() {
         counter += 1;
-        log_name(&entry.path().to_str().unwrap().to_string());
+        logger::log_name(&entry.path().to_str().unwrap().to_string());
+        println!("{:?}",counter);
     }
 }
 

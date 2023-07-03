@@ -1,19 +1,21 @@
 use std::fs::File;
+use std::sync::Mutex;
 use std::io::Write;
 use tracing::{info, Level};
-use tracing_subscriber::FmtSubscriber;
+use tracing_subscriber::fmt;
+use tracing_appender;
 
-fn setup_logger() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let file = File::create("log.txt")?;
-    let writer = tracing_appender::non_blocking(file);
-    let subscriber = FmtSubscriber::builder()
+pub fn setup_logger() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let file = File::create("quant_demo.log").unwrap();
+    let subscriber = fmt()
         .with_max_level(Level::INFO)
-        .finish_with_writer(writer);
+        .with_writer(Mutex::new(file))
+        .finish();
     tracing::subscriber::set_global_default(subscriber)
         .expect("setting default subscriber failed");
     Ok(())
 }
 
-fn log_name(name: &str) {
+pub fn log_name(name: &str) {
     info!("Processing name: {}", name);
 }
