@@ -28,6 +28,7 @@ pub async fn visit(
 
 #[tokio::main]
 async fn main() {
+    logger::setup_logger().unwrap();
     let args:Vec<String> = env::args().collect();
     let ext: &str = &args[1];//"/root/data/dbz/";
     let cplt: &str = &args[2];
@@ -47,10 +48,10 @@ async fn main() {
     .unwrap();
     //DB.use_ns("").use_db("").await.unwrap();
     //let company: Obvs = DB.create("company-year").content(row_json).await.unwrap();
-    let counter = 0;
+    let mut counter = 0;
     for entry in path_vec.iter() {
         counter += 1;
-        println!("{:?}", &entry.path().to_str().unwrap().to_string());
+        log_name(&entry.path().to_str().unwrap().to_string());
     }
 }
 

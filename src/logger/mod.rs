@@ -1,20 +1,19 @@
-use log::{info, LevelFilter};
-use env_logger::Builder;
-use std::{fs::File, io::Write};
+use std::fs::File;
+use std::io::Write;
+use tracing::{info, Level};
+use tracing_subscriber::FmtSubscriber;
 
-pub fn setup() -> std::io::Result<()> {
+fn setup_logger() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let file = File::create("log.txt")?;
-    let mut builder = Builder::new();
-    builder.format(|buf, record| writeln!(buf, "{}: {}", record.level(), record.args()));
-    builder.filter(None, LevelFilter::Info);
-    builder.write_style(env_logger::WriteStyle::Always);
-    builder.target(env_logger::Target::Writer(Box::new(file)));
-    builder.init();
+    let writer = tracing_appender::non_blocking(file);
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::INFO)
+        .finish_with_writer(writer);
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("setting default subscriber failed");
     Ok(())
 }
 
-pub fn log_names(names: Vec<&str>) {
-    for name in names {
-        info!("Processing name: {}", name);
-    }
+fn log_name(name: &str) {
+    info!("Processing name: {}", name);
 }
