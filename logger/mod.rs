@@ -1,4 +1,3 @@
-extern crate logger;
 use log::{info, LevelFilter};
 use env_logger::Builder;
 use std::{fs::File, io::Write};
