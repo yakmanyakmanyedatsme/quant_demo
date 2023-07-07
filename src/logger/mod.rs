@@ -16,6 +16,10 @@ pub fn setup_logger() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-pub fn log_name(name: &str) {
+pub async fn log_name(name: &str) {
     info!("Processing name: {}", name);
+}
+
+pub async fn log_polars_object<T: std::fmt::Debug>(gen_object: &T){
+    info!("Polars_Object: {:?}", &gen_object);
 }

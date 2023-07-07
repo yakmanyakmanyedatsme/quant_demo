@@ -1,19 +1,28 @@
 mod logger;
+mod reits;
+mod crsp;
+use crsp::csv_crsp_reader;
+use reits::reit_data::output_reit_tickers;
+use reits::reit_data;
 use surrealdb::engine::any;
 use surrealdb::engine::remote::ws::Client;
 use surrealdb::engine::remote::ws::Ws;
 use surrealdb::kvs::Val;
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
-use surrealdb::{self, dbs::Session, kvs::Datastore};
+use surrealdb::engine::any::Any;
+use surrealdb::engine::any::connect;
 use tokio;
 use tokio::fs::{self,DirEntry};
 use std::env;
-use std::path::Path;
-use tokio::spawn;
+use std::path::{Path,PathBuf};
 use tokio_stream::StreamExt;
+use polars::prelude::*;
+use tracing::{info,Level};
+use tracing_subscriber::fmt;
+use tracing_appender;
 
-static DB: Surreal<Client> = Surreal::init();
+static DB: Surreal<Any> = Surreal::init();
 
 pub async fn visit(
     paths: &str,
@@ -41,22 +50,31 @@ async fn main() {
     let url: &str = "209.127.152.40:21";
     let completed_file = std::path::Path::new(cplt);//"/root/data/complete.txt"
     let path_vec = visit(&ext).await.unwrap();
-    DB.connect::<Ws>("10.162.0.2:8080").await.unwrap();
-    // Log into the database
-    DB.signin(Root {
+    let db = Surreal::new::<Ws>("127.0.0.1:8000").await.unwrap();
+    // Signin as a namespace, database, or root user
+    db.signin(Root {
         username: "root",
         password: "root",
     })
-    .await
-    .unwrap();
-    println!("Connected");
-    DB.use_ns("commodities").use_db("soy.futures").await.unwrap();
+    .await.unwrap();
+    // Select a specific namespace / database
+    //let ses = Session::for_db("commodities","soy.futures");
+    println!("connected");
     //let company: Obvs = DB.create("company-year").content(row_json).await.unwrap();
     let mut counter = 0;
-    for entry in path_vec.iter() {
-        counter += 1;
-        logger::log_name(&entry.path().to_str().unwrap().to_string());
-        println!("{:?}",counter);
+    let mut reit_ticks = output_reit_tickers().await.unwrap();
+    let mut reit_ticks = reit_data::reit_ticker_vec_split(&reit_ticks).await.unwrap();
+    let crsp_path: PathBuf = PathBuf::from("y5bmhefpwmpjmfcw.csv");
+    let mut df = CsvReader::from_path(crsp_path).unwrap()
+        .has_header(true)
+        .with_schema(Arc::new(csv_crsp_reader::get_test_crsp_schema().await.unwrap().clone()))
+        .finish().unwrap(); 
+    logger::log_polars_object(&df
+        .groupby(["TICKER"])
+        .unwrap()
+        .select(&["VOL","SHROUT"])
+        .mean()
+        .unwrap()).await;
+    println!("{:?}",df.clone().lazy().select([count()]).collect().unwrap());
+    let df_vec = &reit_data::query_ticker(reit_ticks, df.clone()).await;
     }
-}
-
