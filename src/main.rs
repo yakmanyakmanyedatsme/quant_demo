@@ -80,8 +80,9 @@ async fn main() {
         let df_vec = &reit_data::query_ticker(reit_ticks, df.clone()).await.unwrap();
         println!("{:?}",df_vec.len());
         for reit_df in df_vec.into_iter() {
+            if reit_df.height() == 0 {continue;}
             println!("{:?}",&reit_df.clone().lazy().select([count()]).collect().unwrap());
             logger::log_polars_object(&reit_df.clone().head(Some(15))).await;
-            logger::log_polars_object(reit_data::prepare_ticker(&reit_df, "RET").await).await;
+            println!("{:?}", &reit_data::prepare_ticker(&reit_df, "RET").await);
         }
 }

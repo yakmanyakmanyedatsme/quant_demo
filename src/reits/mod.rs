@@ -59,32 +59,32 @@ pub mod reit_data{
     }
 
 
-    pub async fn prepare_ticker<'a>(dt: DataFrame, y_axis: &str) -> Option<(std::ops::Range<NaiveDateTime>,std::ops::Range<f64>)>{//, from_date: &NaiveDateTime, end_date: &NaiveDateTime){
-        let dates = dt.column("date").unwrap();
+    pub async fn prepare_ticker(dt: &DataFrame, y_axis: &str) -> Option<(std::ops::Range<NaiveDateTime>,std::ops::Range<f64>)>{//, from_date: &NaiveDateTime, end_date: &NaiveDateTime){
+        print_df(dt,10).await;
+        let dates: ChunkedArray<polars::datatypes::Utf8Type> = dt.column("date").unwrap().date().unwrap().to_string("%Y-%m-%d");
         let y_vals = dt.column(y_axis).unwrap();
         let mut chrono_dates : Vec<NaiveDateTime> = Vec::new();
-        for date in dates.iter() {
-            let date = date.get_str().unwrap();
+        for date in dates.into_iter() {
+            //let date = date as str;
             let temp = |x: &str| -> NaiveDateTime{
                 NaiveDate::from_ymd_opt(x.clone()[0..4].parse::<i32>().unwrap(),
                 x.clone()[5..7].parse::<i32>().unwrap().try_into().unwrap(),
                 x.clone()[8..10].parse::<i32>().unwrap().try_into().unwrap()
                 ).unwrap().and_hms_opt(0, 0, 0).unwrap()
             };
-            chrono_dates.push(temp(date));
+            chrono_dates.push(temp(&date.unwrap()));
         }
-
         let temp_from_date = *chrono_dates.iter().min().unwrap();
         let temp_to_date = *chrono_dates.iter().max().unwrap();
-        let temp_min_yval: f64 = y_vals.min().unwrap();
-        let temp_max_yval: f64 = y_vals.max().unwrap();
+        let temp_min_yval = y_vals.min::<f64>().unwrap();
+        let temp_max_yval = y_vals.max::<f64>().unwrap();
+        println!("{:?}", temp_to_date);
         println!("{:?}", temp_min_yval);
-        println!("{:?}", temp_max_yval);
         let (from_date, to_date) = (temp_from_date, temp_to_date);
         let (max_ret,min_ret) = (temp_max_yval, temp_min_yval);
         let date_range = from_date..to_date;
-        let ret_range = (1.2*&min_ret)..(1.2*&max_ret);
-        let ret_tup = (date_range.clone(),ret_range.clone());
+        let ret_range = (1.2*min_ret)..(1.2*max_ret);
+        let ret_tup = (date_range,ret_range);
         Some(ret_tup)
     }
 
@@ -122,12 +122,11 @@ pub mod reit_data{
         let mut nms: Vec<String> = vec![];
         let mut parse_sel_array: Vec<Selector> = vec![];
         for i in 0..array.len(){
-            nms.push(format!("{}{}{}",reit_url_base,array[i].to_string(),reit_url_end));
+            nms.push(format!("{}{}{}",reit_url_base,array[i].to_string(), reit_url_end));
         }
         let sel_array: [&str;10] = ["body", "div.dialog-off-canvas-main-canvas", "div.l-page", "main.l-content",
         "div.l-container--narrow", "div.region-content", "div.paragraph--id--972",
         "div.field--name-field-views-view", "table.views-table", "tbody"];
-
         let reit_names = Selector::parse("td.views-field-title").unwrap();
         let ticker_symb = Selector::parse("div.ticker-symbol").unwrap();
         let reit_href = Selector::parse("a").unwrap();
