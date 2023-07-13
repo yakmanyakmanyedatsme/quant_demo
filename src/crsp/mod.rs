@@ -14,11 +14,31 @@ pub mod csv_crsp_reader {
         UInt8, Float64, Float64, Int64, Float64, Float64, Float64, UInt8, UInt8, Float64,
         Float64, Float64, Float64, Float64];
   
+    
+    pub async fn get_test_crsp_schema_update() -> Option<Schema>{
+            let crsp_schema: Schema = Schema::from_iter([
+                                                      Field::new("PERMNO", Int64),
+                                                      Field::new("date", Date),
+                                                      Field::new("SICCD", Utf8),
+                                                      Field::new("TICKER", Utf8),
+                                                      Field::new("COMNAM", Utf8),
+                                                      Field::new("SHRCLS", Utf8),
+                                                      Field::new("PERMCO", Utf8),
+                                                      Field::new("PRC", Float64),
+                                                      Field::new("VOL", Int64),
+                                                      Field::new("RET", Float64),
+                                                      Field::new("SHROUT", Int64),
+                                                      Field::new("NUMRTD", Int64),
+                                                      Field::new("RETX", Utf8),
+                                                    ]);
+            Some(crsp_schema)
+        }
+
     pub async fn get_test_crsp_schema() -> Option<Schema>{
         let crsp_schema: Schema = Schema::from_iter([
                                                         Field::new("PERMNO", Int64),
                                                         Field::new("date", Date),
-                                                        Field::new("SICCD", Date),
+                                                        Field::new("SICCD", Utf8),
                                                         Field::new("TICKER", Utf8),
                                                         Field::new("COMNAM", Utf8),
                                                         Field::new("SHRCLS", Utf8),
